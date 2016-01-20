@@ -176,7 +176,7 @@ class Version(models.Model):
 
     # Change 3: The type column was available in (1.6.6), without
     # having null=True, default=VERSION_CHANGE
-    type = models.PositiveSmallIntegerField(choices=VERSION_TYPE_CHOICES, db_index=True, null=True, default=VERSION_CHANGE)
+    # type = models.PositiveSmallIntegerField(choices=VERSION_TYPE_CHOICES, db_index=True, null=True, default=VERSION_CHANGE)
 
     @property
     def object_version(self):
