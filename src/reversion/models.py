@@ -17,6 +17,18 @@ from django.utils.encoding import force_text, python_2_unicode_compatible
 from reversion.errors import RevertError
 
 
+# This is added back in, so the type field can be serialized to the initial
+# migration.
+VERSION_ADD = 0
+VERSION_CHANGE = 1
+VERSION_DELETE = 2
+
+VERSION_TYPE_CHOICES = (
+    (VERSION_ADD, "Addition"),
+    (VERSION_CHANGE, "Change"),
+    (VERSION_DELETE, "Deletion"),
+)
+
 def safe_revert(versions):
     """
     Attempts to revert the given models contained in the give versions.
@@ -43,15 +55,19 @@ UserModel = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 @python_2_unicode_compatible
 class Revision(models.Model):
 
-    """A group of related object versions."""
+    """
+    A group of related object versions.
+    """
 
     manager_slug = models.CharField(
+        # Change 1: The max_length field was changed in 1.10.0 from 200 to 191.
         max_length = 191,
         db_index = True,
         default = "default",
     )
 
     date_created = models.DateTimeField(auto_now_add=True,
+                                        # Change 2: this index is not yet there in 1.6.6.
                                         db_index=True,
                                         verbose_name=_("date created"),
                                         help_text="The date and time this revision was created.")
@@ -157,6 +173,10 @@ class Version(models.Model):
     serialized_data = models.TextField(help_text="The serialized form of this version of the model.")
 
     object_repr = models.TextField(help_text="A string representation of the object.")
+
+    # Change 3: The type column was available in (1.6.6), without
+    # having null=True, default=VERSION_CHANGE
+    type = models.PositiveSmallIntegerField(choices=VERSION_TYPE_CHOICES, db_index=True, null=True, default=VERSION_CHANGE)
 
     @property
     def object_version(self):
